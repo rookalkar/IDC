@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
-    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8">
-    </script>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="https://d3js.org/d3-queue.v2.min.js"></script>
+    
     <body></body>
+    
     <script>
-        
         var temp;
         d3_queue.queue().defer(d3.csv, "data/facilities.csv")
             .await(analyze);
@@ -17,9 +17,5 @@
                 .filter(function(d){ return d.key == "electricity"});
             console.log(temp[0].values[0]);
         }
-        
-        
-
-
     </script>
 </html>
