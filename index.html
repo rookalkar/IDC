@@ -1,21 +1,213 @@
 <!DOCTYPE html>
-<html>
-    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-    <script src="https://d3js.org/d3-queue.v2.min.js"></script>
-    
-    <body></body>
-    
-    <script>
-        var temp;
-        d3_queue.queue().defer(d3.csv, "data/facilities.csv")
-            .await(analyze);
-        
-        function analyze(error, data){
+<meta charset="utf-8">
+<style> /* set the CSS */
+
+body { font: 12px Arial;}
+
+path {
+    stroke: steelblue;
+    stroke-width: 5;
+    fill: none;
+}
+
+circle{
+  fill:steelblue;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: grey;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+</style>
+<body>
+
+<div id="option">
+    <select onchange="update(this.value)">
+         <option value="electricity">Electricity</option>
+         <option value="computer">Computer</option>
+         <option value="classroom_good_condition">Classroom Good Condition</option>
+         <option value="classroom_major_repair">Classroom Major Repair</option>
+         <option value="classroom_minor_repair">Classroom Minor Repair</option>
+         <option value="girls_toilet">Girls Toilet</option>
+         <option value="common_or_boys_toilet">Common or Boys Toilet</option>
+         <option value="drinking_water">Drinking Water</option>
+         <option value="mdm">MDM</option>
+         <option value="kitchen_shed">Kitchen Shed</option>
+    </select>
+</div>
+
+<!-- load the d3.js library -->
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="https://d3js.org/d3-queue.v2.min.js"></script>
+
+<script>
+
+var temp, facility,
+    iyear = 2006,
+    fyear = 2014;
+
+var graph_data= []; //It is the final sorted data to be rendered in the graph
+
+function load(parameter, district, make){
+    //Takes facilities as `parameter` and updates the graph.
+    // `make` set to true creates a new graph on the same chart, whereas when it is false, it updates the already existing graph
+    d3_queue.queue()
+        .defer(d3.csv, "data/facilities.csv")
+        .await(analyze);
+
+    function analyze(error, data){
+        if (error) throw error;
             temp = d3.nest()
                 .key(function(d) {return d.facility;})
                 .entries(data)
-                .filter(function(d){ return d.key == "electricity"});
-            console.log(temp[0].values[0]);
-        }
-    </script>
-</html>
+                .filter(function(d){
+                  return (d.key == parameter);});
+            for(var i = 0; i < temp[0].values.length; i++){
+              if(temp[0].values[i].district_name == district){
+                console.log(temp[0].values[i]);
+                graph_data = [];
+                graph_data.push(
+                  {date: '06', value: temp[0].values[i].year_2006},
+                  {date: '07', value: temp[0].values[i].year_2007},
+                  {date: '08', value: temp[0].values[i].year_2008},
+                  {date: '09', value: temp[0].values[i].year_2009},
+                  {date: '10', value: temp[0].values[i].year_2010},
+                  {date: '11', value: temp[0].values[i].year_2011},
+                  {date: '12', value: temp[0].values[i].year_2012},
+                  {date: '13', value: temp[0].values[i].year_2013},
+                  {date: '14', value: temp[0].values[i].year_2014}
+                );
+
+              }
+            }
+
+            if(make == true){
+              console.log('going in draw()');
+              draw();
+            } else{
+              console.log('going in update()');
+              updateData();
+            }
+            //console.log(temp);
+    }
+}
+
+load('electricity','AHMADNAGAR', true);
+
+function draw(){
+
+  graph_data.forEach(function(d) {
+    //console.log(d);
+      d.date = parseDate(d.date);
+      d.value = +d.value;
+  });
+
+  //console.log(graph_data);
+  x.domain(d3.extent(graph_data, function(d) { return d.date; }));
+  //y.domain([0, d3.max(data, function(d) { return d.value; })]);
+  y.domain([0, 100]);
+
+  // Add the valueline path.
+  svg.append("path")
+      .attr("class", "line")
+      .attr("d", valueline(graph_data));
+
+/*
+  circle = svg.selectAll("circle")
+                  .data(graph_data)
+                  .enter().append("circle")
+                  .attr("cy", function(d) { return y(d.value); })
+                  .attr("cx", function(d) { return x(d.date); })
+                  .attr("r", function(d) { return 5 });
+*/
+  // Add the X Axis
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  // Add the Y Axis
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis);
+}
+
+//console.log(graph_data);
+// Set the dimensions of the canvas / graph
+var margin = {top: 100, right: 20, bottom: 30, left: 100},
+    width = 600,
+    height = 400;
+
+var circle;
+// Parse the date / time
+var parseDate = d3.time.format("%y").parse;
+
+// Set the ranges
+var x = d3.time.scale().range([0, width]);
+var y = d3.scale.linear().range([height, 0]);
+
+// Define the axes
+var xAxis = d3.svg.axis().scale(x)
+    .orient("bottom").ticks(5);
+
+var yAxis = d3.svg.axis().scale(y)
+    .orient("left").ticks(5);
+
+// Define the line
+var valueline = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.value); });
+
+// Adds the svg canvas
+var svg = d3.select("body")
+    .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")");
+
+// Get the data
+
+
+// ** Update data section (Called from the onclick)
+function updateData() {
+    // Get the data again
+    	// Scale the range of the data again
+
+      graph_data.forEach(function(d) {
+        //console.log(d);
+          d.date = parseDate(d.date.toString());
+          d.value = +d.value;
+      });
+
+    	x.domain(d3.extent(graph_data, function(d) { return d.date; }));
+	    //y.domain([0, d3.max(data, function(d) { return d.value; })]);
+      y.domain([0, 100]);
+    // Select the section we want to apply our changes to
+    var svg = d3.select("body").transition();
+
+    // Make the changes
+        svg.select(".line")   // change the line
+            .duration(750)
+            .attr("d", valueline(graph_data));
+        svg.select(".x.axis") // change the x axis
+            .duration(750)
+            .call(xAxis);
+        svg.select(".y.axis") // change the y axis
+            .duration(750)
+            .call(yAxis);
+}
+
+function update(facility){
+  //console.log(facility);
+  load(facility,'AHMADNAGAR',false);
+  //updateData();
+}
+
+</script>
+</body>
