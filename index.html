@@ -10,7 +10,7 @@ path {
 }
 
 circle{
-  fill:steelblue;
+  fill: steelblue;
 }
 
 .axis path,
@@ -49,12 +49,18 @@ var temp,
     facility, // type of facility selected
     iyear = 2006, //initial year of timescale
     fyear = 2014, //final year of timescale
-    graph_data = []; //It is the final sorted data to be rendered in the graph
-    color_codes = ['#28ABE3','#20DA9B','#E8B81A','#DB3340','#7F7F7F'],
-    selected_districts = ['AHMADNAGAR','AKOLA','JALNA','NAGPUR','PARBHANI'],
+    graph_data = [], //It is the final sorted data to be rendered in the graph
+    color_codes = ['#28ABE3', '#20DA9B', '#E8B81A', '#DB3340', '#7F7F7F'],
+    selected_districts = ['AHMADNAGAR', 'AKOLA', 'JALNA', 'NAGPUR', 'PARBHANI'],
     selected_facility = 'electricity';
+
 // Set the dimensions of the canvas / graph
-var margin = {top: 100, right: 20, bottom: 30, left: 100},
+var margin = {
+        top: 100,
+        right: 20,
+        bottom: 30,
+        left: 100
+    },
     width = 600,
     height = 400;
 
@@ -74,21 +80,25 @@ var yAxis = d3.svg.axis().scale(y)
 
 // Define the line
 var valueline = d3.svg.line()
-    .x(function(d) { return x(d.date); })
-    .y(function(d) { return y(d.value); });
+    .x(function(d) {
+        return x(d.date);
+    })
+    .y(function(d) {
+        return y(d.value);
+    });
 
 // Adds the svg canvas
 var svg = d3.select("body")
     .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
     .append("g")
-        .attr("transform",
-              "translate(" + margin.left + "," + margin.top + ")");
+    .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
 
 load(selected_facility, selected_districts, true); // initially loading the data for AHMADNAGAR when page is opened.
 
-function load(parameter, district, make){
+function load(parameter, district, make) {
     // Everytime an update need to be made to the graph, this function is called
     //  Takes facilities as `parameter` and name of district as `district` and updates the graph.
     // `make` set to true creates a new graph on the same chart, whereas when it is false, it updates the already existing graph
@@ -96,113 +106,137 @@ function load(parameter, district, make){
         .defer(d3.csv, "data/facilities.csv")
         .await(analyze);
 
-    function analyze(error, data){
+    function analyze(error, data) {
         if (error) throw error;
-            temp = d3.nest()
-                .key(function(d) {return d.facility;})
-                .entries(data)
-                .filter(function(d){
-                  return (d.key == parameter);});
+        temp = d3.nest()
+            .key(function(d) {
+                return d.facility;
+            })
+            .entries(data)
+            .filter(function(d) {
+                return (d.key == parameter);
+            });
 
-            graph_data = [];
+        graph_data = [];
 
-            for(var j = 0; j < district.length; j++){
-              for(var i = 0; i < temp[0].values.length; i++){
-                if(temp[0].values[i].district_name == district[j]){
-                  //console.log(temp[0].values[i]);
-                  graph_data.push(
-                    [
-                      {date: '06', value: temp[0].values[i].year_2006},
-                      {date: '07', value: temp[0].values[i].year_2007},
-                      {date: '08', value: temp[0].values[i].year_2008},
-                      {date: '09', value: temp[0].values[i].year_2009},
-                      {date: '10', value: temp[0].values[i].year_2010},
-                      {date: '11', value: temp[0].values[i].year_2011},
-                      {date: '12', value: temp[0].values[i].year_2012},
-                      {date: '13', value: temp[0].values[i].year_2013},
-                      {date: '14', value: temp[0].values[i].year_2014}
-                    ]
-                  );
+        for (var j = 0; j < district.length; j++) {
+            for (var i = 0; i < temp[0].values.length; i++) {
+                if (temp[0].values[i].district_name == district[j]) {
+                    //console.log(temp[0].values[i]);
+                    graph_data.push(
+                        [{
+                            date: '06',
+                            value: Math.min(temp[0].values[i].year_2006, 100)
+                        }, {
+                            date: '07',
+                            value: Math.min(temp[0].values[i].year_2007, 100)
+                        }, {
+                            date: '08',
+                            value: Math.min(temp[0].values[i].year_2008, 100)
+                        }, {
+                            date: '09',
+                            value: Math.min(temp[0].values[i].year_2009, 100)
+                        }, {
+                            date: '10',
+                            value: Math.min(temp[0].values[i].year_2010, 100)
+                        }, {
+                            date: '11',
+                            value: Math.min(temp[0].values[i].year_2011, 100)
+                        }, {
+                            date: '12',
+                            value: Math.min(temp[0].values[i].year_2012, 100)
+                        }, {
+                            date: '13',
+                            value: Math.min(temp[0].values[i].year_2013, 100)
+                        }, {
+                            date: '14',
+                            value: Math.min(temp[0].values[i].year_2014, 100)
+                        }]
+                    );
                 }
-              }
             }
-
-            console.log(graph_data);
-            if(make == true){
-              draw();
-            } else{
-              updateData();
-            }
+        }
+        
+        console.log(graph_data);
+        if (make == true) {
+            draw();
+        } else {
+            updateData();
+        }
     }
 }
 
-function draw(){
-  //called initially to declare and draw the graph.
+function draw() {
+    //called initially to declare and draw the graph.
 
-  for(var i = 0; i < graph_data.length; i++){
-    graph_data[i].forEach(function(d) {
-        d.date = parseDate(d.date);
-        d.value = +d.value;
-    });
+    for (var i = 0; i < graph_data.length; i++) {
+        graph_data[i].forEach(function(d) {
+            d.date = parseDate(d.date);
+            d.value = +d.value;
+        });
 
-    x.domain(d3.extent(graph_data[i], function(d) { return d.date; }));
-    //y.domain([0, d3.max(data, function(d) { return d.value; })]);
-    y.domain([0, 100]);
+        x.domain(d3.extent(graph_data[i], function(d) {
+            return d.date;
+        }));
+        //y.domain([0, d3.max(data, function(d) { return d.value; })]);
+        y.domain([0, 100]);
 
-    // Add the valueline path.
-    svg.append("path")
-        .attr("class", 'line')
-        .attr("id",'line' + i)
-        .attr("stroke",color_codes[i])
-        .attr("d", valueline(graph_data[i]));
-  }
+        // Add the valueline path.
+        svg.append("path")
+            .attr("class", 'line')
+            .attr("id", 'line' + i)
+            .attr("stroke", color_codes[i])
+            .attr("d", valueline(graph_data[i]));
+    }
 
-  // Add the X Axis
-  svg.append("g")
-      .attr("class", "x axis")
-      .attr("transform", "translate(0," + height + ")")
-      .call(xAxis);
+    // Add the X Axis
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
 
-  // Add the Y Axis
-  svg.append("g")
-      .attr("class", "y axis")
-      .call(yAxis);
+    // Add the Y Axis
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
 }
 
 
 // ** Update data section (Called from the onclick)
 function updateData() {
-      // called to make transitions from the updated data
-      var svg = d3.select("body").transition();
+    // called to make transitions from the updated data
+    var svg = d3.select("body").transition();
 
-      for(var i = 0; i < graph_data.length; i++){
+    for (var i = 0; i < graph_data.length; i++) {
         // Scale the range of the data again
         graph_data[i].forEach(function(d) {
             d.date = parseDate(d.date.toString());
             d.value = +d.value;
         });
 
-        x.domain(d3.extent(graph_data[i], function(d) { return d.date; }));
+        x.domain(d3.extent(graph_data[i], function(d) {
+            return d.date;
+        }));
         //y.domain([0, d3.max(data, function(d) { return d.value; })]);
         y.domain([0, 100]);
 
         // Make the changes
-          svg.select("#line"+i.toString())   // change the line
-              .duration(750)
-              .attr("d", valueline(graph_data[i]));
-      }
+        svg.select("#line" + i.toString()) // change the line
+            .duration(750)
+            .attr("d", valueline(graph_data[i]));
+    }
 
-        svg.select(".x.axis") // change the x axis
-            .duration(750)
-            .call(xAxis);
-        svg.select(".y.axis") // change the y axis
-            .duration(750)
-            .call(yAxis);
+    svg.select(".x.axis") // change the x axis
+        .duration(750)
+        .call(xAxis);
+    svg.select(".y.axis") // change the y axis
+        .duration(750)
+        .call(yAxis);
 }
 
-function update(facility){
-  //called when the option is changed.
-  load(facility, selected_districts, false);
+function update(facility) {
+    //called when the option is changed.
+    load(facility, selected_districts, false);
 }
 
 </script>
