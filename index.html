@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 
-<link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
-<script src="http://code.jquery.com/jquery-1.8.2.js"></script>
-<script src="http://code.jquery.com/ui/1.9.0/jquery-ui.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
+<script src="https://code.jquery.com/jquery-1.8.2.js"></script>
+<script src="https://code.jquery.com/ui/1.9.0/jquery-ui.js"></script>
+<!-- load the d3.js library -->
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://d3js.org/d3-queue.v2.min.js"></script>
 
 <style> /* set the CSS */
 
@@ -57,11 +60,8 @@ circle{
     </select>
 </div>
 
-<!-- load the d3.js library -->
-<script src="http://d3js.org/d3.v3.min.js"></script>
-<script src="https://d3js.org/d3-queue.v2.min.js"></script>
-
 <script>
+
 
 var temp,
     facility, // type of facility selected
@@ -285,6 +285,11 @@ function update(facility) {
     load(selected_districts, false);
 }
 
+</script>
+
+<div id="slider">
+
+<script>
 $("#slider").slider({
         range: true,
         min: 0,
@@ -307,6 +312,5 @@ $("#slider").slider({
     });
 </script>
 
-<div id="slider">
 
 </body>
