@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
+<script src="http://code.jquery.com/jquery-1.8.2.js"></script>
+<script src="http://code.jquery.com/ui/1.9.0/jquery-ui.js"></script>
+
 <style> /* set the CSS */
 
 body { font: 12px Arial;}
@@ -19,6 +24,19 @@ circle{
     stroke: grey;
     stroke-width: 1;
     shape-rendering: crispEdges;
+}
+
+#slider label {
+    position: absolute;
+    width: 20px;
+    margin-left: -10px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+#slider{
+  width:50%;
+  margin-left: 10%;
 }
 
 </style>
@@ -96,9 +114,9 @@ var svg = d3.select("body")
     .attr("transform",
         "translate(" + margin.left + "," + margin.top + ")");
 
-load(selected_facility, selected_districts, true); // initially loading the data for AHMADNAGAR when page is opened.
+load(selected_districts, true); // initially loading the data for AHMADNAGAR when page is opened.
 
-function load(parameter, district, make) {
+function load(district, make) {
     // Everytime an update need to be made to the graph, this function is called
     //  Takes facilities as `parameter` and name of district as `district` and updates the graph.
     // `make` set to true creates a new graph on the same chart, whereas when it is false, it updates the already existing graph
@@ -114,7 +132,7 @@ function load(parameter, district, make) {
             })
             .entries(data)
             .filter(function(d) {
-                return (d.key == parameter);
+                return (d.key == selected_facility);
             });
 
         graph_data = [];
@@ -123,41 +141,68 @@ function load(parameter, district, make) {
             for (var i = 0; i < temp[0].values.length; i++) {
                 if (temp[0].values[i].district_name == district[j]) {
                     //console.log(temp[0].values[i]);
-                    graph_data.push(
-                        [{
+                    var dummy = [];
+                    if (2006 >= iyear && 2006 <= fyear) {
+                        dummy.push({
                             date: '06',
                             value: Math.min(temp[0].values[i].year_2006, 100)
-                        }, {
+                        });
+                    }
+                    if (2007 >= iyear && 2007 <= fyear) {
+                        dummy.push({
                             date: '07',
                             value: Math.min(temp[0].values[i].year_2007, 100)
-                        }, {
+                        });
+                    }
+                    if (2008 >= iyear && 2008 <= fyear) {
+                        dummy.push({
                             date: '08',
                             value: Math.min(temp[0].values[i].year_2008, 100)
-                        }, {
+                        });
+                    }
+                    if (2009 >= iyear && 2009 <= fyear) {
+                        dummy.push({
                             date: '09',
                             value: Math.min(temp[0].values[i].year_2009, 100)
-                        }, {
+                        });
+                    }
+                    if (2010 >= iyear && 2010 <= fyear) {
+                        dummy.push({
                             date: '10',
                             value: Math.min(temp[0].values[i].year_2010, 100)
-                        }, {
+                        });
+                    }
+                    if (2011 >= iyear && 2011 <= fyear) {
+                        dummy.push({
                             date: '11',
                             value: Math.min(temp[0].values[i].year_2011, 100)
-                        }, {
+                        });
+                    }
+                    if (2012 >= iyear && 2012 <= fyear) {
+                        dummy.push({
                             date: '12',
                             value: Math.min(temp[0].values[i].year_2012, 100)
-                        }, {
+                        });
+                    }
+                    if (2013 >= iyear && 2013 <= fyear) {
+                        dummy.push({
                             date: '13',
                             value: Math.min(temp[0].values[i].year_2013, 100)
-                        }, {
+                        });
+                    }
+                    if (2014 >= iyear && 2014 <= fyear) {
+                        dummy.push({
                             date: '14',
                             value: Math.min(temp[0].values[i].year_2014, 100)
-                        }]
-                    );
+                        });
+                    }
+                    graph_data.push(dummy);
+                    console.log(dummy);
                 }
             }
         }
-        
-        console.log(graph_data);
+
+        //console.log(graph_data);
         if (make == true) {
             draw();
         } else {
@@ -236,8 +281,32 @@ function updateData() {
 
 function update(facility) {
     //called when the option is changed.
-    load(facility, selected_districts, false);
+    selected_facility = facility;
+    load(selected_districts, false);
 }
 
+$("#slider").slider({
+        range: true,
+        min: 0,
+        max: 8,
+        values: [0, 8],
+        slide: function(event, ui) {
+            iyear = ui.values[0] + 2006;
+            fyear = ui.values[1] + 2006;
+            //console.log(iyear, fyear);
+            load(selected_districts, false);
+        }
+    })
+    .each(function() {
+        var opt = $(this).data().uiSlider.options;
+        var vals = opt.max - opt.min;
+        for (var i = 0; i <= vals; i++) {
+            var el = $('<label>' + (2006 + i) + '</label>').css('left', (i / vals * 100) + '%');
+            $("#slider").append(el);
+        }
+    });
 </script>
+
+<div id="slider">
+
 </body>
