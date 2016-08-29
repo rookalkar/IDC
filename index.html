@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
 <script src="https://code.jquery.com/jquery-1.8.2.js"></script>
 <script src="https://code.jquery.com/ui/1.9.0/jquery-ui.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <!-- load the d3.js library -->
 <script src="https://d3js.org/d3.v3.min.js"></script>
 <script src="https://d3js.org/d3-queue.v2.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
 
 <style> /* set the CSS */
 
@@ -38,81 +41,160 @@ circle{
 }
 
 #slider{
-  width:50%;
-  margin-left: 10%;
+  width:40%;
+  margin:0 auto;
+  margin-top: 15px;
 }
 
+#option{
+  margin:0 auto;
+  padding-top: 50px;
+  width:20%;
+  text-align: center;
+}
+
+#performance1{
+  display: inline-block;
+  text-align: center;
+
+}
 </style>
 <body>
 
-<div id="option">
-    <select onchange="update(this.value)">
-         <option value="electricity">Electricity</option>
-         <option value="computer">Computer</option>
-         <option value="classroom_good_condition">Classroom Good Condition</option>
-         <option value="classroom_major_repair">Classroom Major Repair</option>
-         <option value="classroom_minor_repair">Classroom Minor Repair</option>
-         <option value="girls_toilet">Girls Toilet</option>
-         <option value="common_or_boys_toilet">Common or Boys Toilet</option>
-         <option value="drinking_water">Drinking Water</option>
-         <option value="mdm">MDM</option>
-         <option value="kitchen_shed">Kitchen Shed</option>
-    </select>
-</div>
+  <div class="row">
+    <div id="slider">
+  </div>
+
+  <div class="container">
+    <div class="col-sm-3" id="performance0"></div>
+    <div class="col-sm-3" id="performance1"></div>
+    <div class="col-sm-3" id="performance2"></div>
+    <div class="col-sm-3" id="performance3"></div>
+  </div>
+
+  <div class="row">
+    <div id="option">
+        <select onchange="update(this.value)">
+             <option value="electricity">Electricity</option>
+             <option value="computer">Computer</option>
+             <option value="classroom_good_condition">Classroom Good Condition</option>
+             <option value="classroom_major_repair">Classroom Major Repair</option>
+             <option value="classroom_minor_repair">Classroom Minor Repair</option>
+             <option value="girls_toilet">Girls Toilet</option>
+             <option value="common_or_boys_toilet">Common or Boys Toilet</option>
+             <option value="drinking_water">Drinking Water</option>
+             <option value="mdm">MDM</option>
+             <option value="kitchen_shed">Kitchen Shed</option>
+        </select>
+    </div>
+  </div>
+
+  <div class="row" id="facilities" style="margin:0 auto; text-align: center;"></div>
 
 <script>
-
 
 var temp,
     facility, // type of facility selected
     iyear = 2006, //initial year of timescale
     fyear = 2014, //final year of timescale
-    graph_data = [], //It is the final sorted data to be rendered in the graph
-    color_codes = ['#28ABE3', '#20DA9B', '#E8B81A', '#DB3340', '#7F7F7F'],
-    selected_districts = ['AHMADNAGAR', 'AKOLA', 'JALNA', 'NAGPUR', 'PARBHANI'],
-    selected_facility = 'electricity';
+    facilities_data = [], //It is the final sorted data to be rendered in the graph
+    performance_data = []; //It is the final sorted data to be rendered in the graph
+color_codes = ['#28ABE3', '#20DA9B', '#DB3340', '#E8B81A', '#7F7F7F'],
+    selected_districts = ['AHMADNAGAR', 'AKOLA', 'JALNA','BID'],
+    selected_facility = 'electricity',
+    selected_performance = '1-2_letters';
 
 // Set the dimensions of the canvas / graph
-var margin = {
-        top: 100,
+var facilities_margin = {
+        top: 10,
         right: 20,
         bottom: 30,
-        left: 100
+        left: 50
     },
-    width = 600,
-    height = 400;
+    facilities_width = 600,
+    facilities_height = 300;
+
+var performance_margin = {
+        top: 50,
+        right: 20,
+        bottom: 50,
+        left: 50
+    },
+    performance_width = 200,
+    performance_height = 150;
 
 // Parse the date / time
 var parseDate = d3.time.format("%y").parse;
 
 // Set the ranges
-var x = d3.time.scale().range([0, width]);
-var y = d3.scale.linear().range([height, 0]);
-
+var facilities_x = d3.time.scale().range([0, facilities_width]);
+var facilities_y = d3.scale.linear().range([facilities_height, 0]);
+var performance_x = d3.time.scale().range([0, performance_width]);
+var performance_y = d3.scale.linear().range([performance_height, 0]);
 // Define the axes
-var xAxis = d3.svg.axis().scale(x)
+var facilities_xAxis = d3.svg.axis().scale(facilities_x)
     .orient("bottom").ticks(5);
 
-var yAxis = d3.svg.axis().scale(y)
+var facilities_yAxis = d3.svg.axis().scale(facilities_y)
+    .orient("left").ticks(5);
+
+var performance_xAxis = d3.svg.axis().scale(performance_x)
+    .orient("bottom").ticks(5);
+
+var performance_yAxis = d3.svg.axis().scale(performance_y)
     .orient("left").ticks(5);
 
 // Define the line
-var valueline = d3.svg.line()
+var facilities_valueline = d3.svg.line()
     .x(function(d) {
-        return x(d.date);
+        return facilities_x(d.date);
     })
     .y(function(d) {
-        return y(d.value);
+        return facilities_y(d.value);
+    });
+
+var performance_valueline = d3.svg.line()
+    .x(function(d) {
+        return performance_x(d.date);
+    })
+    .y(function(d) {
+        return performance_y(d.value);
     });
 
 // Adds the svg canvas
-var svg = d3.select("body")
+var facilities_chart = d3.select("#facilities")
     .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
+    .attr("width", facilities_width + facilities_margin.left + facilities_margin.right)
+    .attr("height", facilities_height + facilities_margin.top + facilities_margin.bottom)
     .append("g")
+    .attr("align", "center")
     .attr("transform",
-        "translate(" + margin.left + "," + margin.top + ")");
+        "translate(" + facilities_margin.left + "," + facilities_margin.top + ")");
+
+var performance_chart = [];
+
+for (var i = 0; i < selected_districts.length; i++) {
+    var dummy = d3.select("#performance"+i.toString())
+        //d3.select("#performance1")
+        .append("svg")
+        .attr("width", performance_width + performance_margin.left + performance_margin.right)
+        .attr("height", performance_height + performance_margin.top + performance_margin.bottom)
+        .append("g")
+        .attr("align", "center")
+        .attr("transform",
+            "translate(" + performance_margin.left + "," + performance_margin.top + ")");
+    performance_chart.push(dummy);
+}
+
+for(var i = 0; i < performance_chart.length; i++){
+  performance_chart[i].append("text")
+              .attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
+              .attr("font-size", "15px")
+              .attr("transform", "translate("+ (performance_width/2) +","+(performance_height * 1.3)+")")  // centre below axis
+
+              .text(selected_districts[i]);
+}
+
 
 load(selected_districts, true); // initially loading the data for AHMADNAGAR when page is opened.
 
@@ -120,11 +202,18 @@ function load(district, make) {
     // Everytime an update need to be made to the graph, this function is called
     //  Takes facilities as `parameter` and name of district as `district` and updates the graph.
     // `make` set to true creates a new graph on the same chart, whereas when it is false, it updates the already existing graph
-    d3_queue.queue()
-        .defer(d3.csv, "data/facilities.csv")
-        .await(analyze);
 
-    function analyze(error, data) {
+    d3_queue.queue()
+        .defer(d3.csv, "data/performance.csv")
+        .await(analyze_performance);
+
+    function load_facilities() {
+        d3_queue.queue()
+            .defer(d3.csv, "data/facilities.csv")
+            .await(analyze_facilities);
+    }
+
+    function analyze_facilities(error, data) {
         if (error) throw error;
         temp = d3.nest()
             .key(function(d) {
@@ -135,8 +224,89 @@ function load(district, make) {
                 return (d.key == selected_facility);
             });
 
-        graph_data = [];
+        facilities_data = [];
 
+        for (var j = 0; j < district.length; j++) {
+            for (var i = 0; i < temp[0].values.length; i++) {
+                if (temp[0].values[i].district_name == district[j]) {
+                    var dummy = [];
+                    if (2006 >= iyear && 2006 <= fyear) {
+                        dummy.push({
+                            date: '06',
+                            value: Math.min(temp[0].values[i].year_2006, 100)
+                        });
+                    }
+                    if (2007 >= iyear && 2007 <= fyear) {
+                        dummy.push({
+                            date: '07',
+                            value: Math.min(temp[0].values[i].year_2007, 100)
+                        });
+                    }
+                    if (2008 >= iyear && 2008 <= fyear) {
+                        dummy.push({
+                            date: '08',
+                            value: Math.min(temp[0].values[i].year_2008, 100)
+                        });
+                    }
+                    if (2009 >= iyear && 2009 <= fyear) {
+                        dummy.push({
+                            date: '09',
+                            value: Math.min(temp[0].values[i].year_2009, 100)
+                        });
+                    }
+                    if (2010 >= iyear && 2010 <= fyear) {
+                        dummy.push({
+                            date: '10',
+                            value: Math.min(temp[0].values[i].year_2010, 100)
+                        });
+                    }
+                    if (2011 >= iyear && 2011 <= fyear) {
+                        dummy.push({
+                            date: '11',
+                            value: Math.min(temp[0].values[i].year_2011, 100)
+                        });
+                    }
+                    if (2012 >= iyear && 2012 <= fyear) {
+                        dummy.push({
+                            date: '12',
+                            value: Math.min(temp[0].values[i].year_2012, 100)
+                        });
+                    }
+                    if (2013 >= iyear && 2013 <= fyear) {
+                        dummy.push({
+                            date: '13',
+                            value: Math.min(temp[0].values[i].year_2013, 100)
+                        });
+                    }
+                    if (2014 >= iyear && 2014 <= fyear) {
+                        dummy.push({
+                            date: '14',
+                            value: Math.min(temp[0].values[i].year_2014, 100)
+                        });
+                    }
+                    facilities_data.push(dummy);
+                }
+            }
+        }
+        if (make == true) {
+            draw();
+        } else {
+            updateData();
+        }
+    }
+
+
+    function analyze_performance(error, data) {
+        if (error) throw error;
+        temp = d3.nest()
+            .key(function(d) {
+                return d.performance;
+            })
+            .entries(data)
+            .filter(function(d) {
+                return (d.key == selected_performance);
+            });
+        performance_data = [];
         for (var j = 0; j < district.length; j++) {
             for (var i = 0; i < temp[0].values.length; i++) {
                 if (temp[0].values[i].district_name == district[j]) {
@@ -196,54 +366,86 @@ function load(district, make) {
                             value: Math.min(temp[0].values[i].year_2014, 100)
                         });
                     }
-                    graph_data.push(dummy);
-                    console.log(dummy);
+                    performance_data.push(dummy);
                 }
             }
         }
-
-        //console.log(graph_data);
-        if (make == true) {
-            draw();
-        } else {
-            updateData();
-        }
+        load_facilities();
     }
+
 }
 
 function draw() {
     //called initially to declare and draw the graph.
+    //performance_data = facilities_data;
 
-    for (var i = 0; i < graph_data.length; i++) {
-        graph_data[i].forEach(function(d) {
+    for (var i = 0; i < facilities_data.length; i++) {
+        //console.log(facilities_data[i]);
+        facilities_data[i].forEach(function(d) {
             d.date = parseDate(d.date);
             d.value = +d.value;
         });
 
-        x.domain(d3.extent(graph_data[i], function(d) {
+        facilities_x.domain(d3.extent(facilities_data[i], function(d) {
             return d.date;
         }));
         //y.domain([0, d3.max(data, function(d) { return d.value; })]);
-        y.domain([0, 100]);
+        facilities_y.domain([0, 100]);
 
-        // Add the valueline path.
-        svg.append("path")
+        // Add the facilities_valueline path.
+        facilities_chart.append("path")
             .attr("class", 'line')
-            .attr("id", 'line' + i)
+            .attr("id", 'facilities_line' + i)
             .attr("stroke", color_codes[i])
-            .attr("d", valueline(graph_data[i]));
+            .attr("d", facilities_valueline(facilities_data[i]));
     }
 
     // Add the X Axis
-    svg.append("g")
+    facilities_chart.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis);
+        .attr("id", "facilities-x-axis")
+        .attr("transform", "translate(0," + facilities_height + ")")
+        .call(facilities_xAxis);
 
     // Add the Y Axis
-    svg.append("g")
+    facilities_chart.append("g")
         .attr("class", "y axis")
-        .call(yAxis);
+        .attr("id", "facilities-y-axis")
+        .call(facilities_yAxis);
+
+    for (var i = 0; i < performance_data.length; i++) {
+        //console.log(performance_data[i]);
+        performance_data[i].forEach(function(d) {
+            d.date = parseDate(d.date);
+            d.value = +d.value;
+        });
+
+        performance_x.domain(d3.extent(performance_data[i], function(d) {
+            return d.date;
+        }));
+        //y.domain([0, d3.max(data, function(d) { return d.value; })]);
+        performance_y.domain([0, 100]);
+
+        // Add the facilities_valueline path.
+        performance_chart[i].append("path")
+            .attr("class", 'line')
+            .attr("id", 'performance_line' + i)
+            .attr("stroke", color_codes[i])
+            .attr("d", performance_valueline(performance_data[i]));
+
+        // Add the X Axis
+        performance_chart[i].append("g")
+            .attr("class", "x axis")
+            .attr("id", 'performance-x-axis' + i)
+            .attr("transform", "translate(0," + performance_height + ")")
+            .call(performance_xAxis);
+
+        // Add the Y Axis
+        performance_chart[i].append("g")
+            .attr("class", "y axis")
+            .attr("id", "performance-y-axis")
+            .call(performance_yAxis);
+    }
 }
 
 
@@ -252,31 +454,61 @@ function updateData() {
     // called to make transitions from the updated data
     var svg = d3.select("body").transition();
 
-    for (var i = 0; i < graph_data.length; i++) {
+    for (var i = 0; i < facilities_data.length; i++) {
         // Scale the range of the data again
-        graph_data[i].forEach(function(d) {
+        facilities_data[i].forEach(function(d) {
             d.date = parseDate(d.date.toString());
             d.value = +d.value;
         });
 
-        x.domain(d3.extent(graph_data[i], function(d) {
+        facilities_x.domain(d3.extent(facilities_data[i], function(d) {
             return d.date;
         }));
         //y.domain([0, d3.max(data, function(d) { return d.value; })]);
-        y.domain([0, 100]);
+        facilities_y.domain([0, 100]);
 
         // Make the changes
-        svg.select("#line" + i.toString()) // change the line
+        svg.select("#facilities_line" + i.toString()) // change the line
             .duration(750)
-            .attr("d", valueline(graph_data[i]));
+            .attr("d", facilities_valueline(facilities_data[i]));
     }
 
-    svg.select(".x.axis") // change the x axis
+    svg.select("#facilities-x-axis") // change the x axis
         .duration(750)
-        .call(xAxis);
-    svg.select(".y.axis") // change the y axis
+        .call(facilities_xAxis);
+    svg.select("#facilities-y-axis") // change the y axis
         .duration(750)
-        .call(yAxis);
+        .call(facilities_yAxis);
+
+    for (var i = 0; i < performance_data.length; i++) {
+        //console.log(performance_data[i]);
+        performance_data[i].forEach(function(d) {
+            d.date = parseDate(d.date);
+            d.value = +d.value;
+        });
+
+        performance_x.domain(d3.extent(performance_data[i], function(d) {
+            return d.date;
+        }));
+        //y.domain([0, d3.max(data, function(d) { return d.value; })]);
+        performance_y.domain([0, 100]);
+
+        // Add the facilities_valueline path.
+        //console.log('#performance_line'+i);
+        svg.select("#performance_line" + i) // change the line
+            .duration(750)
+            .attr("d", performance_valueline(performance_data[i]));
+
+        svg.select('#performance-x-axis' + i) // change the x axis
+            .duration(750)
+            .call(performance_xAxis);
+
+        svg.select("#performance-y-axis") // change the y axis
+            .duration(750)
+            .call(performance_yAxis);
+
+    }
+
 }
 
 function update(facility) {
@@ -285,11 +517,6 @@ function update(facility) {
     load(selected_districts, false);
 }
 
-</script>
-
-<div id="slider">
-
-<script>
 $("#slider").slider({
         range: true,
         min: 0,
@@ -311,6 +538,5 @@ $("#slider").slider({
         }
     });
 </script>
-
 
 </body>
